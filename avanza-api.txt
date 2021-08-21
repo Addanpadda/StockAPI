@@ -1,0 +1,6 @@
+Search: https://www.avanza.se/_cqbe/search/global-search/global-search-template?query=a
+Stock data: https://www.avanza.se/_cqbe/guide/stock/3986 or https://www.avanza.se/_cqbe/guide/stock/3986/top or https://www.avanza.se/_cqbe/guide/stock/3986/body
+Stock news: https://www.avanza.se/_cqbe/guide/news/3986
+https://www.avanza.se/_api/price-chart/stock/3986?timePeriod=today where timePeriod is today,one_week,one_month,three_months,this_year,one_year,three_years,five_years,infinity
+
+https://www.avanza.se/aktier/om-aktien.html/3986
