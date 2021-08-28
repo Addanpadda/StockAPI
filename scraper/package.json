@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "mariadb": "^2.5.4",
+    "node-fetch": "^2.6.1"
+  }
+}

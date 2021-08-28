@@ -3,4 +3,16 @@ Stock data: https://www.avanza.se/_cqbe/guide/stock/3986 or https://www.avanza.s
 Stock news: https://www.avanza.se/_cqbe/guide/news/3986
 https://www.avanza.se/_api/price-chart/stock/3986?timePeriod=today where timePeriod is today,one_week,one_month,three_months,this_year,one_year,three_years,five_years,infinity
 
+today         = minute
+one_week      = ten_minutes
+one_month     = hour
+three_months  = day
+this_year
+one_year
+three_years
+five_years
+infinity      = m
+
+
+
 https://www.avanza.se/aktier/om-aktien.html/3986
