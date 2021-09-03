@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "@rodrigogs/mysql-events": "^0.6.0",
     "mariadb": "^2.5.4",
+    "mysql": "^2.18.1",
     "node-fetch": "^2.6.1"
   }
 }

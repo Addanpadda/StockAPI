@@ -4,10 +4,9 @@ const db            = require('./database');
 const orderbookID    = 3986; // Amazon
 
 
-
 async function runScapeCycle() {
     const stockTimeseries = await avanzaAPI.scrape(orderbookID);
-    stockTimeseries.removeDuplicates();
+    //stockTimeseries.removeDuplicates();
     db.insertTimeseries(stockTimeseries);
 }
 
@@ -18,3 +17,5 @@ function startScheduledScraping() {
 
 
 startScheduledScraping();
+
+db.addStockChangeCallback(""); // TODO: Add callback to fetch the affected stock

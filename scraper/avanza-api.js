@@ -9,12 +9,13 @@ const stockNotInDatabase = true;
 
 
 module.exports.scrape = async function(orderbookID) {
-    if(stockNotInDatabase) {
-        // Variable containing the stock timeseries data
-        let stockTimeseries = new timeseries.timeseries(orderbookID);
+    // Variable containing the stock timeseries data
+    let stockTimeseries = new timeseries.timeseries(orderbookID);
+    let res;
 
+    try {
         for (let period = 0; period < APITimePeriods.length; period++) {
-            const res        = await fetch(`https://www.avanza.se/_api/price-chart/stock/${orderbookID}?timePeriod=${APITimePeriods[period]}&resolution=${bestRes[period]}`);
+            res = await fetch(`https://www.avanza.se/_api/price-chart/stock/${orderbookID}?timePeriod=${APITimePeriods[period]}&resolution=${bestRes[period]}`);
             console.log("[+] Fetched " + `https://www.avanza.se/_api/price-chart/stock/${orderbookID}?timePeriod=${APITimePeriods[period]}&resolution=${bestRes[period]}`);
             const json       = await res.json();
             const timeseriesJSON = await json.ohlc;
@@ -34,11 +35,30 @@ module.exports.scrape = async function(orderbookID) {
 
             }
         }
+    } catch(err) {
+        console.err("[-] Error: " + err + "; JSON: " + JSON.stringify(res));
+    } finally {
         console.log("[+] Scraped for " + orderbookID);
         //console.log(stockTimeseries.log());
-        
+    
         return stockTimeseries;
     }
+}
+
+module.exports.scrapeLast = async function(orderbookID) {
+        const res        = await fetch(`https://www.avanza.se/_cqbe/guide/stock/${orderbookID}/top`);
+        console.log("[+] Fetched " + `https://www.avanza.se/_cqbe/guide/stock/${orderbookID}/top`);
+        const json       = await res.json();
+        const timeseriesJSON = await json.quote;
+
+        return new timeseries.value(
+            open  = timeseriesJSON[i].open,
+            close = timeseriesJSON[i].close,
+            low   = timeseriesJSON[i].low,
+            high  = timeseriesJSON[i].high,
+            timestamp = new Date(timeseriesJSON[i].timestamp),
+            totalVolumeTraded = timeseriesJSON[i].totalVolumeTraded
+        );
 }
 
 module.exports.getStockMetaData = async function(query) {
