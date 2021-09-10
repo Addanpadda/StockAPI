@@ -1,27 +1,36 @@
-const fetch           = require('node-fetch');
-const timeseries      = require('./timeseries');
+const fetch      = require('node-fetch');
+const timeseries = require('./timeseries');
+const logger     = require('./logger');
+const log        = logger.log;
 
+// Specific values for the avanza api on charts
 const APITimePeriods = ["today", "one_week", "one_month", "five_years", "infinity"];
 const bestRes        = ["minute", "ten_minutes", "hour", "day", "week"];
 
 
-const stockNotInDatabase = true;
+async function fetchJSON(url) {
+    const res  = await fetch(url);
+    const json = res.json();
 
+    return json;
+}
 
+// Scrapes a stock's timeseries data
 module.exports.scrape = async function(orderbookID) {
     // Variable containing the stock timeseries data
     let stockTimeseries = new timeseries.timeseries(orderbookID);
-    let res;
 
     try {
+        // Scrape for all the time periods of a chart
         for (let period = 0; period < APITimePeriods.length; period++) {
-            res = await fetch(`https://www.avanza.se/_api/price-chart/stock/${orderbookID}?timePeriod=${APITimePeriods[period]}&resolution=${bestRes[period]}`);
-            console.log("[+] Fetched " + `https://www.avanza.se/_api/price-chart/stock/${orderbookID}?timePeriod=${APITimePeriods[period]}&resolution=${bestRes[period]}`);
-            const json       = await res.json();
+            let json = await fetchJSON(`https://www.avanza.se/_api/price-chart/stock/${orderbookID}?timePeriod=${APITimePeriods[period]}&resolution=${bestRes[period]}`);
+            log(logger.TYPE.INFO, logger.SOURCE.API, "Fetched " + `https://www.avanza.se/_api/price-chart/stock/${orderbookID}?timePeriod=${APITimePeriods[period]}&resolution=${bestRes[period]}`);
             const timeseriesJSON = await json.ohlc;
 
-            console.log(APITimePeriods[period] + " gave " + timeseriesJSON.length);
+            log(logger.TYPE.INFO, logger.SOURCE.API, 'Timeperiod ' + APITimePeriods[period] + ' gave ' + timeseriesJSON.length + ' results for ' + orderbookID);
 
+            // Add all the individual values (for each time period)
+            // in the stockTimeseries variable
             for (let i = 0; i < timeseriesJSON.length; i++) {
                 stockTimeseries.addValue(new timeseries.value(
                     open  = timeseriesJSON[i].open,
@@ -31,25 +40,21 @@ module.exports.scrape = async function(orderbookID) {
                     timestamp = new Date(timeseriesJSON[i].timestamp),
                     totalVolumeTraded = timeseriesJSON[i].totalVolumeTraded
                 ));
-
-
             }
         }
     } catch(err) {
-        console.err("[-] Error: " + err + "; JSON: " + JSON.stringify(res));
+        throw err;
     } finally {
-        console.log("[+] Scraped for " + orderbookID);
-        //console.log(stockTimeseries.log());
-    
+        log(logger.TYPE.INFO, logger.SOURCE.API, "Scraped for " + orderbookID);    
         return stockTimeseries;
     }
 }
 
+// Experimental option
 module.exports.scrapeLast = async function(orderbookID) {
-        const res        = await fetch(`https://www.avanza.se/_cqbe/guide/stock/${orderbookID}/top`);
-        console.log("[+] Fetched " + `https://www.avanza.se/_cqbe/guide/stock/${orderbookID}/top`);
-        const json       = await res.json();
+        const json           = await fetchJSON(`https://www.avanza.se/_cqbe/guide/stock/${orderbookID}/top`);
         const timeseriesJSON = await json.quote;
+        log(logger.TYPE.INFO, logger.SOURCE.API, "Fetched " + `https://www.avanza.se/_cqbe/guide/stock/${orderbookID}/top`);
 
         return new timeseries.value(
             open  = timeseriesJSON[i].open,
@@ -61,23 +66,61 @@ module.exports.scrapeLast = async function(orderbookID) {
         );
 }
 
-module.exports.getStockMetaData = async function(query) {
-    const res  = await fetch(`https://www.avanza.se/_cqbe/search/global-search/global-search-template?query=${query}`);
-    const json = await res.json();
-    const hit  = await json.resultGroups[0].hits[0];
+// Fetches a orderbookID from a query
+module.exports.getOrderbookIDFromSearch = async function(query) {
+    let orderbookID;
 
+    try {
+        const json  = await fetchJSON(`https://www.avanza.se/_cqbe/search/global-search/global-search-template?query=${query}`);
+        orderbookID = json.resultGroups[0].hits[0].link.orderbookId;
+    } catch(err) {
+        throw err;
+    } finally {
+        log(logger.TYPE.INFO, logger.SOURCE.API, `${query} was found as orderbookID ${orderbookID}`);
+        return orderbookID;
+    }
+}
 
-    return new stock(
-        name        = hit.link.linkDisplay,
-        orderBookID = hit.link.orderbookId,
-        currency    = hit.currency
+// Fetches surounding data about a stock
+module.exports.getStockData = async function(orderbookID) {
+    const json  = await fetchJSON(`https://www.avanza.se/_cqbe/guide/stock/${orderbookID}/top`);
+    
+    return new StockData (
+        ticker             = json.listing.tickerSymbol,
+        orderbookID        = json.orderbookId,
+        name               = json.name,
+        currency           = json.listing.currency,
+        countryCode        = json.listing.countryCode,
+        marketPlaceName    = json.listing.marketPlaceName,
+        volatility         = json.keyIndicators.volatility,
+        numberOfOwners     = json.keyIndicators.numberOfOwners,
+        beta               = json.keyIndicators.beta,
+        priceEarningsRatio = json.keyIndicators.priceEarningsRatio,
+        priceSalesRatio    = json.keyIndicators.priceSalesRatio,
+        marketCapital      = json.keyIndicators.marketCapital.value,
+        equityPerShare     = json.keyIndicators.equityPerShare.value,
+        turnoverPerShare   = json.keyIndicators.turnoverPerShare.value,
+        earningsPerShare   = json.keyIndicators.earningsPerShare.value
     );
 }
 
-class stock {
-    constructor(name, orderBookID, currency) {
-        this.name        = name;
-        this.orderBookID = orderBookID;
-        this.currency    = currency;
+// Datastructure of the StockData return type
+class StockData {
+    constructor(ticker, orderbookID, name, currency, countryCode, marketPlaceName, volatility, numberOfOwners, beta, priceEarningsRatio, priceSalesRatio, equityPerShare, turnoverPerShare, earningsPerShare) {
+        this.ticker             = ticker;
+        this.orderbookID        = orderbookID;
+        this.name               = name;
+        this.currency           = currency;
+        this.countryCode        = countryCode;
+        this.marketPlaceName    = marketPlaceName;
+        this.volatility         = volatility;
+        this.numberOfOwners     = numberOfOwners;
+        this.beta               = beta;
+        this.priceEarningsRatio = priceEarningsRatio;
+        this.priceSalesRatio    = priceSalesRatio;
+        this.marketCapital      = marketCapital;
+        this.equityPerShare     = equityPerShare;
+        this.turnoverPerShare   = turnoverPerShare;
+        this.earningsPerShare   = earningsPerShare;
     }
 }

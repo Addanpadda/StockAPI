@@ -1,4 +1,7 @@
+const logger     = require('./logger');
+const log        = logger.log;
 
+// A signle value for a timeseries of values
 class value {
     constructor (open, close, low, high, timestamp, totalVolumeTraded) {
         this.open              = open;
@@ -9,6 +12,8 @@ class value {
         this.totalVolumeTraded = totalVolumeTraded
     }
 
+    // Checks if two value objects are representing the same time
+    // in a timeseries, so duplicates can be discarded
     equals(obj) {
         if (this.timestamp.toLocaleString() === obj.timestamp.toLocaleString()) return true;
         else return false;
@@ -20,10 +25,6 @@ class timeseries {
 
     constructor(orderBookID) {
         this.orderBookID = orderBookID;
-    }
-
-    log() {
-        return JSON.stringify(this.#timeseriesList);
     }
 
     addValue(value) {
@@ -42,9 +43,10 @@ class timeseries {
             }
         }
 
-        console.log("[+] Duplicates removed for " + this.orderBookID);
+        log(logger.TYPE.INFO, logger.SOURCE.SYSTEM, `Duplicates removed for ${this.orderBookID}`);
     }
 
+    // Special DB function for batch (bulk) insertion of values.
     generateMariaDBBatch() {
         let data = [];
 
