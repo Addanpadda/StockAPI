@@ -21,22 +21,21 @@ class value {
 }
 
 class timeseries {
-    #timeseriesList = [];
-
     constructor(orderBookID) {
+        this.timeseriesList = [];
         this.orderBookID = orderBookID;
     }
 
     addValue(value) {
-        this.#timeseriesList.push(value)
+        this.timeseriesList.push(value)
     }
 
     removeDuplicates() {
-        for (let firstIndex = 0; firstIndex < this.#timeseriesList.length; firstIndex++) {
+        for (let firstIndex = 0; firstIndex < this.timeseriesList.length; firstIndex++) {
             
-            for (let secondIndex = firstIndex + 1; secondIndex < this.#timeseriesList.length; secondIndex++) {
-                if (this.#timeseriesList[firstIndex].equals(this.#timeseriesList[secondIndex])) {
-                    this.#timeseriesList.splice(secondIndex, 1);
+            for (let secondIndex = firstIndex + 1; secondIndex < this.timeseriesList.length; secondIndex++) {
+                if (this.timeseriesList[firstIndex].equals(this.timeseriesList[secondIndex])) {
+                    this.timeseriesList.splice(secondIndex, 1);
                     secondIndex--; // Compensate for the removed index
 
                 }
@@ -50,15 +49,15 @@ class timeseries {
     generateMariaDBBatch() {
         let data = [];
 
-        for (let i = 0; i < this.#timeseriesList.length; i++) {
+        for (let i = 0; i < this.timeseriesList.length; i++) {
             data.push([
                 this.orderBookID,
-                this.#timeseriesList[i].timestamp.toLocaleString(),
-                this.#timeseriesList[i].open,
-                this.#timeseriesList[i].close,
-                this.#timeseriesList[i].high,
-                this.#timeseriesList[i].low,
-                this.#timeseriesList[i].totalVolumeTraded,
+                this.timeseriesList[i].timestamp.toLocaleString("sv-EN"),
+                this.timeseriesList[i].open,
+                this.timeseriesList[i].close,
+                this.timeseriesList[i].high,
+                this.timeseriesList[i].low,
+                this.timeseriesList[i].totalVolumeTraded,
             ])
         }
 
