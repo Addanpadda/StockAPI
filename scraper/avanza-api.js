@@ -84,6 +84,8 @@ module.exports.getOrderbookIDFromSearch = async function(query) {
 // Fetches surounding data about a stock
 module.exports.getStockData = async function(orderbookID) {
     const json  = await fetchJSON(`https://www.avanza.se/_cqbe/guide/stock/${orderbookID}/top`);
+
+    log(logger.TYPE.DEGUB, logger.SOURCE.API, JSON.stringify(json));
     
     return new StockData (
         ticker             = json.listing.tickerSymbol,
@@ -94,13 +96,14 @@ module.exports.getStockData = async function(orderbookID) {
         marketPlaceName    = json.listing.marketPlaceName,
         volatility         = json.keyIndicators.volatility,
         numberOfOwners     = json.keyIndicators.numberOfOwners,
-        beta               = json.keyIndicators.beta,
-        priceEarningsRatio = json.keyIndicators.priceEarningsRatio,
-        priceSalesRatio    = json.keyIndicators.priceSalesRatio,
-        marketCapital      = json.keyIndicators.marketCapital.value,
-        equityPerShare     = json.keyIndicators.equityPerShare.value,
-        turnoverPerShare   = json.keyIndicators.turnoverPerShare.value,
-        earningsPerShare   = json.keyIndicators.earningsPerShare.value
+        // These are optional, hence the validation
+        beta               = json.keyIndicators.beta               ? json.keyIndicators.beta : null,
+        priceEarningsRatio = json.keyIndicators.priceEarningsRatio ? json.keyIndicators.priceEarningsRatio : null,
+        priceSalesRatio    = json.keyIndicators.priceSalesRatio    ? json.keyIndicators.priceSalesRatio : null,
+        marketCapital      = json.keyIndicators.marketCapital      ? json.keyIndicators.marketCapital.value : null,
+        equityPerShare     = json.keyIndicators.equityPerShare     ? json.keyIndicators.equityPerShare.value : null,
+        turnoverPerShare   = json.keyIndicators.turnoverPerShare   ? json.keyIndicators.turnoverPerShare.value : null,
+        earningsPerShare   = json.keyIndicators.earningsPerShare   ? json.keyIndicators.earningsPerShare.value : null,
     );
 }
 

@@ -90,6 +90,23 @@ module.exports.getActiveStocksOrderbookIDs = async function() {
 
 }
 
+module.exports.test = async function() {
+    let conn;
+    let stockData;
+
+    try {
+        conn = await pool.getConnection();
+        let res  = await conn.query('SELECT ticker,orderbookID FROM stocks WHERE orderbookID IS NULL OR ticker IS NULL;');
+        console.log(res[0]);
+    } catch(err) {
+        if(conn) conn.release();
+        throw err;
+    } finally {
+        conn.release();
+        return stockData;
+    }
+}
+
 // Adds the stock metadata
 module.exports.addStockData = async function(stockIdentifier, stockData) {
     let conn;

@@ -14,6 +14,7 @@ async function runScrape(orderbookID) {
 
 // Scrape all stocks
 async function runScapeCycle() {
+    await handleNullStocks();
     // Get all the stocks' orderbookIDs that should be fetched, from the DB
     let orderbookIDs = await db.getActiveStocksOrderbookIDs();
 
@@ -31,36 +32,43 @@ function startScheduledScraping() {
 // Callback that runs everytime a new stock
 // is added in the DB, which fetches
 // metadata and timeseries for the new stock
-db.addStockChangeCallback(async () => {
-    let unfetchedStock = await db.getNullStocks();
-    let orderbookID;
+db.addStockChangeCallback(handleNullStocks);
 
-    if (unfetchedStock.availableData == db.AVAILABLE_DATA.ORDERBOOKID) {
-        orderbookID = unfetchedStock.value;
-    } else if (unfetchedStock.availableData == db.AVAILABLE_DATA.TICKER) {
-        orderbookID = await avanzaAPI.getOrderbookIDFromSearch(unfetchedStock.value);
-        if(orderbookID == undefined) { // Remove stock from db if it couldnt be found
-            log(logger.TYPE.ERROR, logger.SOURCE.SYSTEM, `orderbookID couldn't be resolved for ${unfetchedStock.value}`);
-            db.removeTicker(unfetchedStock.value);
-            return;
+async function handleNullStocks() {
+    while (true) {
+        let unfetchedStock = await db.getNullStocks();
+        if (!unfetchedStock) break;
+        let orderbookID;
+
+        if (unfetchedStock.availableData == db.AVAILABLE_DATA.ORDERBOOKID) {
+            orderbookID = unfetchedStock.value;
+        } else if (unfetchedStock.availableData == db.AVAILABLE_DATA.TICKER) {
+            orderbookID = await avanzaAPI.getOrderbookIDFromSearch(unfetchedStock.value);
+            if(orderbookID == undefined) { // Remove stock from db if it couldnt be found
+                log(logger.TYPE.ERROR, logger.SOURCE.SYSTEM, `orderbookID couldn't be resolved for ${unfetchedStock.value}`);
+                db.removeTicker(unfetchedStock.value);
+                return;
+            }
+        } else {
+            break;
         }
-    } else {
-        log(logger.TYPE.SEVERE_PROBLEM, logger.SOURCE.DB, "BOTH ORDERBOOKID AND TICKER WAS UNAVAILABLE ON NEW STOCK");
+
+        let stockData = await avanzaAPI.getStockData(orderbookID);
+
+        // Check if passed ticker found matches the exact ticker passed
+        if (unfetchedStock.availableData == db.AVAILABLE_DATA.TICKER &&
+            unfetchedStock.value != stockData.ticker) {
+                log(logger.TYPE.ERROR, logger.SOURCE.SYSTEM, `orderbookID couldn't be resolved for ${unfetchedStock.value}`);
+                db.removeTicker(unfetchedStock.value);
+                return;
+            }
+
+        db.addStockData(unfetchedStock, stockData);
+        runScrape(orderbookID)
+        //handleNullStock(orderbookID, unfetchedStock, stockData);
     }
+}
 
-    let stockData = await avanzaAPI.getStockData(orderbookID);
-
-    // Check if passed ticker found matches the exact ticker passed
-    if (unfetchedStock.availableData == db.AVAILABLE_DATA.TICKER &&
-        unfetchedStock.value != stockData.ticker) {
-            log(logger.TYPE.ERROR, logger.SOURCE.SYSTEM, `orderbookID couldn't be resolved for ${unfetchedStock.value}`);
-            db.removeTicker(unfetchedStock.value);
-            return;
-        }
-
-    db.addStockData(unfetchedStock, stockData);
-    runScrape(orderbookID);
-});
 
 // Scrape all stocks in DB 
 // every five minutes, continuously

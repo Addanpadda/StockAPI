@@ -57,6 +57,7 @@ module.exports.timeseries = async function(ticker, timeperiod) {
     }
     try {
         conn = await pool.getConnection();
+        
         let res = await conn.query(`SELECT * FROM timeseries WHERE timestamp = (SELECT max(timestamp) FROM timeseries WHERE orderbookID = ${orderbookID}) AND orderbookID = ${orderbookID};`);
         console.log(`[+] TOP done for orderbookID ${orderbookID}`);
 
