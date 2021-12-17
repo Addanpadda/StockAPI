@@ -10,9 +10,10 @@ dbCred = DB.Credentials(
     database=os.getenv('DB_NAME')
 )
 
+db = DB.Database(dbCred)
+
 if __name__ == '__main__':
-    db = DB.Database(dbCred)
-    print(len(db.getActiveStocks()))
+    print(db.getActiveStocks())
 
     '''
     cur = d.query("SELECT name FROM stocks", None)

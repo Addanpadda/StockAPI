@@ -8,8 +8,8 @@ Export variables
 Create the mariadb database and tables
 `CREATE DATABASE stock_api;`
 `USE stock_api;`
-`CREATE TABLE timeseries (orderBookID MEDIUMINT, timestamp DATETIME NOT NULL, open SMALLINT UNSIGNED, close SMALLINT UNSIGNED, high SMALLINT UNSIGNED, low SMALLINT UNSIGNED, totalVolumeTraded SMALLINT UNSIGNED, CONSTRAINT definition PRIMARY KEY(orderBookID, timestamp));`
-`CREATE TABLE stocks (ticker VARCHAR(16), orderbookID MEDIUMINT, name VARCHAR(64), currency VARCHAR(6), countryCode VARCHAR(3), marketPlaceName VARCHAR(30), volatility DECIMAL(5,4), numberOfOwners SMALLINT, beta DECIMAL(5,4), priceEarningsRatio DECIMAL(10,2), priceSalesRatio DECIMAL(8,2), marketCapital DECIMAL(18,1), equityPerShare DECIMAL(18,1), turnoverPerShare DECIMAL(6,2), earningsPerShare DECIMAL(6,2), active BOOLEAN);`
+`CREATE TABLE timeseries (orderBookID MEDIUMINT, timestamp DATETIME NOT NULL, open DECIMAL(8, 4) UNSIGNED, close DECIMAL(8, 4) UNSIGNED, high DECIMAL(8, 4) UNSIGNED, low DECIMAL(8, 4) UNSIGNED, totalVolumeTraded SMALLINT UNSIGNED, CONSTRAINT definition PRIMARY KEY(orderBookID, timestamp));`
+`CREATE TABLE stocks (ticker VARCHAR(16), orderbookID MEDIUMINT, name VARCHAR(64), currency VARCHAR(6), countryCode VARCHAR(3), marketPlaceName VARCHAR(30), volatility DECIMAL(5,4), numberOfOwners SMALLINT, beta DECIMAL(5,4), priceEarningsRatio DECIMAL(7,2), priceSalesRatio DECIMAL(8,2), marketCapital DECIMAL(18,1), equityPerShare DECIMAL(18,1), turnoverPerShare DECIMAL(6,2), earningsPerShare DECIMAL(6,2), active BOOLEAN);`
 
 # Scraper references
 https://www.npmjs.com/package/node-fetch
