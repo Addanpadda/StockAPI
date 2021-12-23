@@ -72,10 +72,13 @@ class Database(MariaDBDatabase, IStockAPIEvalutationDatabase):
         fullStocks = []
 
         for i in range(0, len(stocks)):
+        #    if i != 0:
+        #        continue
+
+
             fullStock = FullStock(stocks[i].ticker, stocks[i].orderbookID)
             print(stocks[i].orderbookID)
             cur = self.query('SELECT timestamp,open,close,high,low,totalVolumeTraded FROM timeseries WHERE orderBookID=? AND cast(timestamp as time)="00:00:00";', (stocks[i].orderbookID, ))
-            
             for timestamp, open_, close, high, low, totalVolumeTraded in cur:
                 #d = datetime(int(timestamp[0:4]), int(timestamp[5:7]), int(timestamp[8:10]))
                 if open_ > high:
@@ -95,22 +98,10 @@ class Database(MariaDBDatabase, IStockAPIEvalutationDatabase):
 
     def getPyAlgoTradeFeed(self):
         fullStocks = self.getFullActiveStocks()
-        feed = quandlfeed.Feed()
-
-        '''
-        for stock in fullStocks:
-            #print("Ticker: ", fullStocks[0].ticker)
-            #print("Bars: ", fullStocks[0].timeseries.getPyAlgoTradeBars())
-            print('Adding to feed ', stock.ticker)
-            feed.addBarsFromSequence(stock.ticker, stock.timeseries.getPyAlgoTradeBars())
-        '''
         
         stock = fullStocks[0]
-        print('Adding to feed ', stock.ticker)
-        feed.addBarsFromSequence(stock.ticker, stock.timeseries.getPyAlgoTradeBars())
 
-
-        return feed
+        return stock.getFeed()
 
     def getStockTimeseries(self):
         cur = self.query("SELECT ticker,orderbookID FROM stocks WHERE active=true;", None)

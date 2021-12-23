@@ -1,5 +1,6 @@
 from pyalgotrade.bar import BasicBar
 from pyalgotrade.bar import Frequency
+from pyalgotrade.barfeed import quandlfeed
 
 class Value:
     def __init__(self, dateTime, open_, close, high, low, volume):
@@ -35,3 +36,11 @@ class FullStock:
         self.ticker = ticker
         self.orderbookID = orderbookID
         self.timeseries = Timeseries()
+        self.feed = None
+
+    def getFeed(self):
+        #if (self.feed == None):
+        self.feed = quandlfeed.Feed()
+        self.feed.addBarsFromSequence(self.ticker, self.timeseries.getPyAlgoTradeBars())
+
+        return self.feed
