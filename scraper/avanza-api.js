@@ -116,7 +116,7 @@ class StockData {
         this.currency           = currency;
         this.countryCode        = countryCode;
         this.marketPlaceName    = marketPlaceName;
-        this.volatility         = volatility;
+        this.volatility         = volatility || null;
         this.numberOfOwners     = numberOfOwners;
         this.beta               = beta;
         this.priceEarningsRatio = priceEarningsRatio;
